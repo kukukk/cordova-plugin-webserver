@@ -32,7 +32,10 @@ export function onRequest(success_callback) {
 
 export function sendResponse(
   requestId,
-  params,
+  status,
+  body,
+  headers,
+  isBinary,
   success_callback,
   error_callback
 ) {
@@ -41,7 +44,7 @@ export function sendResponse(
     error_callback,
     WEBSERVER_CLASS,
     SENDRESPONSE_FUNCION,
-    [requestId, params]
+    [requestId, status, body, headers, isBinary]
   );
 }
 

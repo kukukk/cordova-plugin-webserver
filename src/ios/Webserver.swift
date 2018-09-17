@@ -31,6 +31,11 @@
         ]
     }
 
+    func getContentType(headers: Dictionary<String, String>) -> String {
+        let contentType = headers["Content-Type"] ?? "text/plain"
+        return contentType
+    }
+
     func processRequest(request: GCDWebServerRequest, completionBlock: GCDWebServerCompletionBlock) {
         var timeout = 0
         // Fetch data as GCDWebserverDataRequest
@@ -55,19 +60,26 @@
         }
 
         // We got the dict so put information in the response
-        let responseDict = self.responses[requestUUID] as! Dictionary<AnyHashable, Any>
-        let response = GCDWebServerDataResponse(text: responseDict["body"] as! String)
-        response?.statusCode = responseDict["status"] as! Int
+        var responseDict = self.responses[requestUUID] as! Dictionary<String, Any>
+        let contentType = self.getContentType(headers: responseDict["headers"] as! Dictionary<String, String>)
+
+        var response: GCDWebServerResponse
+        if (responseDict["binary"] as! Bool) {
+            response = GCDWebServerDataResponse(data: responseDict["body"] as! Data, contentType: contentType)
+        } else {
+            response = GCDWebServerDataResponse(text: responseDict["body"] as! String)!
+        }
+        response.statusCode = responseDict["status"] as! Int
 
         for (key, value) in (responseDict["headers"] as! Dictionary<String, String>) {
-            response?.setValue(value, forAdditionalHeader: key)
+            response.setValue(value, forAdditionalHeader: key)
         }
 
         // Remove the handled response
         self.responses.removeValue(forKey: requestUUID)
 
         // Complete the async response
-        completionBlock(response!)
+        completionBlock(response)
     }
 
     func onRequest(_ command: CDVInvokedUrlCommand) {
@@ -91,7 +103,12 @@
     }
 
     func sendResponse(_ command: CDVInvokedUrlCommand) {
-        self.responses[command.argument(at: 0) as! String] = command.argument(at: 1)
+        var responseDict: Dictionary<String, Any> = [:]
+        responseDict["status"] = command.argument(at: 1)
+        responseDict["body"] = command.argument(at: 2)
+        responseDict["headers"] = command.argument(at: 3)
+        responseDict["binary"] = command.argument(at: 4)
+        self.responses[command.argument(at: 0) as! String] = responseDict
     }
 
     func start(_ command: CDVInvokedUrlCommand) {

@@ -34,8 +34,8 @@ function onRequest(success_callback) {
   }, WEBSERVER_CLASS, ONREQUEST_FUNCTION, []);
 }
 
-function sendResponse(requestId, params, success_callback, error_callback) {
-  (0, _exec2.default)(success_callback, error_callback, WEBSERVER_CLASS, SENDRESPONSE_FUNCION, [requestId, params]);
+function sendResponse(requestId, status, body, headers, isBinary, success_callback, error_callback) {
+  (0, _exec2.default)(success_callback, error_callback, WEBSERVER_CLASS, SENDRESPONSE_FUNCION, [requestId, status, body, headers, isBinary]);
 }
 
 function stop(success_callback, error_callback) {
